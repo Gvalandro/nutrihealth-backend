@@ -1,5 +1,7 @@
 package com.healthnutri.healthnutrition.service;
 
+import com.healthnutri.healthnutrition.dto.ComparisonResult;
+import com.healthnutri.healthnutrition.dto.FoodDTO;
 import com.healthnutri.healthnutrition.dto.NutritionResponse;
 import com.healthnutri.healthnutrition.model.DailyRecord;
 import com.healthnutri.healthnutrition.model.Meal;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,37 +36,54 @@ public class NutritionService {
     private String appKey;
 
     @Autowired
-    NutritionPlanRepository nutritionPlanRepository;
+    private NutritionPlanRepository nutritionPlanRepository;
 
     @Autowired
-    DailyRecordRepository dailyRecordRepository;
+    private DailyRecordRepository dailyRecordRepository;
 
-    private final RestTemplate restTemplate;
-    public NutritionService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private double totalCalories = 0;
+    private double totalSugars = 0;
+
+/*
     public NutritionResponse calculateNutrition(Meal meal) {
         String query = meal.getQuantityInGrams() + " grams of " + meal.getFoodItem();
+        //System.out.println(query);
         return getNutritionData(query);
     }
+*/
+public NutritionResponse calculateNutrition(List<Meal> foodItems) {
+    List<FoodDTO> mealsWithNutrition = new ArrayList<>();
+    double totalCalories = 0;
+    double totalSugars = 0.0;
 
-    public NutritionResponse calculateNutrition(List<Meal> foodItems) {
-        double totalCalories = 0;
-        double totalSugars = 0;
+    for (Meal meal : foodItems) {
+        String query = meal.getQuantityInGrams() + " grams of " + meal.getFoodItem();
+        NutritionResponse nutritionResponse = getNutritionData(query);
 
-        for (Meal meal : foodItems) {
-            NutritionResponse nutritionResponse = calculateNutrition(meal);
-            if (nutritionResponse != null) {
-                totalCalories += nutritionResponse.getTotalCalories();
-                totalSugars += nutritionResponse.getTotalSugars();
+        if (nutritionResponse != null && nutritionResponse.getFoods() != null) {
+            for (FoodDTO food : nutritionResponse.getFoods()) {
+                Meal mealWithNutrition = new Meal(meal.getFoodItem(), meal.getQuantityInGrams());
+                mealWithNutrition.setCalories(food.getTotalCalories());
+                mealWithNutrition.setNutrients("Sugars: " + food.getTotalSugar());
+                mealsWithNutrition.add(new FoodDTO(food.getName(),food.getTotalCalories(),food.getTotalSugar()));
+
+                totalCalories += food.getTotalCalories();
+                totalSugars += food.getTotalSugar();
             }
         }
-
-        NutritionResponse aggregatedResponse = new NutritionResponse();
-        aggregatedResponse.setTotalCalories(totalCalories);
-        aggregatedResponse.setTotalSugars(totalSugars);
-        return aggregatedResponse;
     }
+
+    NutritionResponse response = new NutritionResponse();
+    response.setFoods(mealsWithNutrition);
+    response.setTotalCalories(totalCalories);
+    response.setTotalSugars(totalSugars);
+
+    System.out.println(response.getFoods());
+    return response;
+}
     private NutritionResponse getNutritionData(String query) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
@@ -79,10 +99,28 @@ public class NutritionService {
                 entity,
                 NutritionResponse.class
         );
-
+        //System.out.println(query);
+        //System.out.println(response.getBody());
+        //System.out.println(response.getHeaders());
         return response.getBody();
     }
 
+    public ComparisonResult compareDailyIntakeWithPlan(Long userId, List<FoodDTO> dailyFoods) {
+        Optional<NutritionPlan> optionalPlan = findByUserId(userId);
+        if (!optionalPlan.isPresent()) {
+            throw new RuntimeException("Plano nutricional não encontrado para o usuário: " + userId);
+        }
+
+        NutritionPlan nutritionPlan = optionalPlan.get();
+
+        double totalDailyCalories = dailyFoods.stream().mapToDouble(FoodDTO::getTotalCalories).sum();
+        double totalDailySugars = dailyFoods.stream().mapToDouble(FoodDTO::getTotalSugar).sum();
+
+        double planCalories = nutritionPlan.getTotalCalories();
+        double planSugars = nutritionPlan.getTotalSugars();
+
+        return new ComparisonResult(totalDailyCalories, planCalories, totalDailySugars, planSugars);
+    }
     public void savePlan(NutritionPlan nutritionPlan){
         nutritionPlanRepository.save(nutritionPlan);
     }
@@ -105,4 +143,6 @@ public class NutritionService {
     public Optional<NutritionPlan> findByUserId(Long userId) {
         return nutritionPlanRepository.findByUserId(userId);
     }
+
+
 }

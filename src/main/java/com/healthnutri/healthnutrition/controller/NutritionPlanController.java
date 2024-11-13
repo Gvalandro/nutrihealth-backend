@@ -17,8 +17,6 @@ public class NutritionPlanController {
     @Autowired
     private NutritionService nutritionService;
 
-
-
     @PostMapping("/add")
     public ResponseEntity<String> addNutritionPlan(@RequestBody NutritionPlan nutritionPlan) {
         NutritionResponse nutritionResponse = nutritionService.calculateNutrition(nutritionPlan.getPlan());
@@ -37,12 +35,18 @@ public class NutritionPlanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateNutritionPlan(@RequestBody NutritionPlan nutritionPlan) {
+    public ResponseEntity<String> updateNutritionPlan(@PathVariable Long id,@RequestBody NutritionPlan nutritionPlan) {
+        Optional<NutritionPlan> existingPlan = nutritionService.findByUserId(id);
+        if (!existingPlan.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
         NutritionResponse nutritionResponse = nutritionService.calculateNutrition(nutritionPlan.getPlan());
-        nutritionPlan.setCreatedAt(LocalDateTime.now());
-        nutritionPlan.setTotalCalories(nutritionResponse.getTotalCalories());
-        nutritionPlan.setTotalSugars(nutritionResponse.getTotalSugars());
-        nutritionService.updatePlan(nutritionPlan);
+
+        NutritionPlan updatePlan = existingPlan.get();
+
+        updatePlan.setTotalCalories(nutritionResponse.getTotalCalories());
+        updatePlan.setTotalSugars(nutritionResponse.getTotalSugars());
+        nutritionService.updatePlan(updatePlan);
         return ResponseEntity.ok("Plano Alimentar atualizado com sucesso!");
     }
 

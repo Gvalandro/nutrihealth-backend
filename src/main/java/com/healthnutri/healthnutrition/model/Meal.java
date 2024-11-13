@@ -23,11 +23,18 @@ public class Meal {
     private int quantityInGrams;
 
     @Column(nullable = false)
-    private int calories;
+    private double calories;
+
     @Column(nullable = false)
     private String nutrients;
     @Column(nullable = false)
     private LocalDate date; // Data da refeição
+
+    public Meal(String food, int quantityInGrams) {
+        this.foodItem = food;
+        this.quantityInGrams = quantityInGrams;
+        this.date = LocalDate.now();
+    }
 
     public Long getId() {
         return id;
@@ -61,11 +68,11 @@ public class Meal {
         this.quantityInGrams = quantityInGrams;
     }
 
-    public int getCalories() {
+    public double getCalories() {
         return calories;
     }
 
-    public void setCalories(int calories) {
+    public void setCalories(double calories) {
         this.calories = calories;
     }
 
@@ -84,6 +91,7 @@ public class Meal {
     public void setDate(LocalDate date) {
         this.date = date;
     }
+
 
 
 }
