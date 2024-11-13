@@ -36,6 +36,10 @@ public class Meal {
         this.date = LocalDate.now();
     }
 
+    public Meal() {
+
+    }
+
     public Long getId() {
         return id;
     }
