@@ -7,7 +7,10 @@ import java.util.List;
 public class NutritionResponse {
     @JsonProperty("foods")
     private List<FoodDTO> foods;
+    @JsonProperty("total_calories")
     private double totalCalories;
+
+    @JsonProperty("total_sugars")
     private double totalSugars;
 
     // Getters and setters
