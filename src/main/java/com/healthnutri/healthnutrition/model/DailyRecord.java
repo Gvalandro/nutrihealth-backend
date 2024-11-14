@@ -6,7 +6,6 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Table(name = "daily-record")
@@ -82,4 +81,5 @@ public class DailyRecord {
     public void setTotalCalories(double totalCalories) {
         this.totalCalories = totalCalories;
     }
+
 }

@@ -2,7 +2,7 @@ package com.healthnutri.healthnutrition.controller;
 
 import com.healthnutri.healthnutrition.dto.NutritionResponse;
 import com.healthnutri.healthnutrition.model.NutritionPlan;
-import com.healthnutri.healthnutrition.service.NutritionService;
+import com.healthnutri.healthnutrition.service.NutritionPlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +15,11 @@ import java.util.Optional;
 public class NutritionPlanController {
 
     @Autowired
-    private NutritionService nutritionService;
+    private NutritionPlanService nutritionService;
 
     @PostMapping("/add")
     public ResponseEntity<String> addNutritionPlan(@RequestBody NutritionPlan nutritionPlan) {
-        NutritionResponse nutritionResponse = nutritionService.calculateNutrition(nutritionPlan.getPlan());
+        NutritionResponse nutritionResponse = nutritionService.calculatePlanNutrition(nutritionPlan.getPlan());
         nutritionPlan.setCreatedAt(LocalDateTime.now());
         nutritionPlan.setTotalSugars(nutritionResponse.getTotalSugars());
         nutritionPlan.setTotalCalories(nutritionResponse.getTotalCalories());
@@ -40,7 +40,7 @@ public class NutritionPlanController {
         if (!existingPlan.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        NutritionResponse nutritionResponse = nutritionService.calculateNutrition(nutritionPlan.getPlan());
+        NutritionResponse nutritionResponse = nutritionService.calculatePlanNutrition(nutritionPlan.getPlan());
 
         NutritionPlan updatePlan = existingPlan.get();
 

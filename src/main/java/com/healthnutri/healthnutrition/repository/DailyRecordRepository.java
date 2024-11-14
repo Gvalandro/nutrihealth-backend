@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface DailyRecordRepository extends JpaRepository<DailyRecord,Long> {
     Optional<DailyRecord> findByDate(LocalDate date);
+
 }

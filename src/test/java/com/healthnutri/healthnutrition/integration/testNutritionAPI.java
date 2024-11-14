@@ -3,13 +3,13 @@ package com.healthnutri.healthnutrition.integration;
 import com.healthnutri.healthnutrition.dto.NutritionResponse;
 import com.healthnutri.healthnutrition.model.Meal;
 import com.healthnutri.healthnutrition.repository.MealRepository;
-import com.healthnutri.healthnutrition.service.NutritionService;
+import com.healthnutri.healthnutrition.service.DailyRecordService;
+import com.healthnutri.healthnutrition.service.NutritionApiService;
+import com.healthnutri.healthnutrition.service.NutritionPlanService;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Exchanger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,8 +30,9 @@ public class testNutritionAPI {
 
     @Autowired
     private RestTemplate restTemplate;
+
     @Autowired
-    private NutritionService nutritionService;
+    private DailyRecordService nutritionService;
 
 
 
@@ -66,6 +66,7 @@ public class testNutritionAPI {
             meals.add(food1);
             meals.add(food2);
             meals.add(food3);
+
 
             NutritionResponse response = nutritionService.calculateNutrition(meals);
 
