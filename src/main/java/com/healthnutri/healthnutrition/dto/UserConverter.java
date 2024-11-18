@@ -15,4 +15,10 @@ public class UserConverter {
         return userDTO;
     }
 
+    public static User toEntity(UserLoginDTO userDTO) {
+        User user = new User();
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(userDTO.getPassword());
+        return user;
+    }
 }

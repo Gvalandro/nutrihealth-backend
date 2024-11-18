@@ -4,8 +4,6 @@ import com.healthnutri.healthnutrition.dto.NutritionResponse;
 import com.healthnutri.healthnutrition.model.Meal;
 import com.healthnutri.healthnutrition.repository.MealRepository;
 import com.healthnutri.healthnutrition.service.DailyRecordService;
-import com.healthnutri.healthnutrition.service.NutritionApiService;
-import com.healthnutri.healthnutrition.service.NutritionPlanService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-public class testNutritionAPI {
+public class NutritionApiTest {
 
     @Mock
     private MealRepository mealRepository;
@@ -61,7 +59,7 @@ public class testNutritionAPI {
             Meal food1 = new Meal("Rice", 200);
             Meal food2 = new Meal("Beef", 140);
             Meal food3 = new Meal("Egg", 80);
-            //Tudo bem
+
             List<Meal> meals = new ArrayList<>();
             meals.add(food1);
             meals.add(food2);

@@ -1,9 +1,8 @@
 package com.healthnutri.healthnutrition.controller;
 
+import com.healthnutri.healthnutrition.config.JwtUtils;
 import com.healthnutri.healthnutrition.dto.UserConverter;
 import com.healthnutri.healthnutrition.dto.UserLoginDTO;
-import com.healthnutri.healthnutrition.model.User;
-import com.healthnutri.healthnutrition.repository.UserRepository;
 import com.healthnutri.healthnutrition.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -24,37 +22,35 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private AuthenticationManager authenticationManager;
 
+
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private JwtUtils jwtUtils;
+
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestParam UserLoginDTO userLoginDTO) {
-        if (userRepository.findByEmail(userLoginDTO.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already exists");
+    public ResponseEntity<?> register(@RequestBody UserLoginDTO userLoginDTO) {
+        try {
+            userService.createUser(UserConverter.toEntity(userLoginDTO));
+            return ResponseEntity.ok("User registered successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        User user = new User();
-        user.setEmail(userLoginDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userLoginDTO.getPassword()));
-        userService.createUser(user);
-        return ResponseEntity.ok("User registred successfully");
     }
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        if(userRepository.findByEmail(email).isPresent()){
-            User user = userRepository.findByEmail(email).get();
-            return ResponseEntity.ok(UserConverter.userDTO(user));
+    public ResponseEntity<?> login(@RequestBody UserLoginDTO userLoginDTO) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            userLoginDTO.getEmail(),
+                            userLoginDTO.getPassword()
+                    )
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(userLoginDTO.getEmail());
+            return ResponseEntity.ok(jwt);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Credenciais inválidas.");
         }
-        return ResponseEntity.badRequest().body("Login is Wrong");
     }
 }

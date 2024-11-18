@@ -5,46 +5,47 @@
     import com.healthnutri.healthnutrition.model.User;
     import com.healthnutri.healthnutrition.repository.UserRepository;
     import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.security.core.userdetails.UserDetails;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.core.userdetails.UsernameNotFoundException;
     import org.springframework.security.crypto.password.PasswordEncoder;
     import org.springframework.stereotype.Service;
 
+    import java.util.Collections;
     import java.util.NoSuchElementException;
 
 
     @Service
-    public class UserService {
+    public class UserService implements UserDetailsService {
 
         @Autowired
         private UserRepository userRepository;
 
         @Autowired
         private PasswordEncoder passwordEncoder;
-
-        public User getByEmail(String email){
-            return userRepository.findByEmail(email).orElseThrow( () -> new NoSuchElementException("Email not found"));
+        public void getByEmail(String email){
+            userRepository.findByEmail(email).orElseThrow( () -> new NoSuchElementException("Email not found"));
         }
+        @Override
+        public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
+            return org.springframework.security.core.userdetails.User.builder()
+                    .username(user.getEmail())
+                    .password(user.getPassword())
+                    .authorities(Collections.emptyList()) // Add roles/authorities here if applicable
+                    .build();
+        }
         public UserDTO getById(Long id){
             User user = userRepository.findById(id).
                     orElseThrow( () -> new NoSuchElementException("User Not Found") );
             return UserConverter.userDTO(user);
 
         }
-
-        //Login User
-        public UserDTO loginUser(String email, String password){
-            User user = this.getByEmail(email);
-            if(user != null && passwordEncoder.matches(password,user.getPassword() )){
-                return UserConverter.userDTO(user);
-            }
-            throw new RuntimeException("Invalid Password");
-        }
-
         //Registro User
         public void createUser(User user){
-            if(userRepository.findByEmail(user.getEmail()).isPresent()){
-                throw new IllegalArgumentException("Email already in use");
-            }
+            getByEmail(user.getEmail());
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
         }
