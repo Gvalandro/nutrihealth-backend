@@ -23,13 +23,19 @@
 
         @Autowired
         private PasswordEncoder passwordEncoder;
-        public void getByEmail(String email){
-            userRepository.findByEmail(email).orElseThrow( () -> new NoSuchElementException("Email not found"));
+        public User getByEmail(String email){
+            return userRepository.findByEmail(email).orElseThrow( () -> new NoSuchElementException("Email not found"));
+        }
+
+        public boolean validatePassword(String rawPassword, String encodedPassword) {
+            return passwordEncoder.matches(rawPassword, encodedPassword);
         }
         @Override
         public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+            System.out.println("✅ Usuário encontrado: " + user.getEmail() + " | Senha: " + user.getPassword());
 
             return org.springframework.security.core.userdetails.User.builder()
                     .username(user.getEmail())
@@ -45,7 +51,9 @@
         }
         //Registro User
         public void createUser(User user){
-            getByEmail(user.getEmail());
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Este email já está registrado");
+            }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
         }
